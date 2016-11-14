@@ -3,8 +3,8 @@ package habittracker.jd.com.habittrackerapp;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.text.ParseException;
@@ -23,9 +23,9 @@ public class HabitTrackerActivity extends AppCompatActivity {
             HabitTrackerContract.HabitEntry.COLUMN_HABIT_DURATION
     };
 
-    String selectionSoccer = HabitTrackerContract.HabitEntry.COLUMN_HABIT_NAME +"=?";
-    String [] soccerSelectionArgs = { AppConst.HABIT_PLAY_SOCCER };
-    String sortOrder = HabitTrackerContract.HabitEntry.COLUMN_HABIT_DURATION +" DESC";
+    String selectionSoccer = HabitTrackerContract.HabitEntry.COLUMN_HABIT_NAME + "=?";
+    String[] soccerSelectionArgs = {AppConst.HABIT_PLAY_SOCCER};
+    String sortOrder = HabitTrackerContract.HabitEntry.COLUMN_HABIT_DURATION + " DESC";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,23 +37,34 @@ public class HabitTrackerActivity extends AppCompatActivity {
         mDb = mDbHelper.getWritableDatabase();
         simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm");
         insertDummyDataToDb();
-        readDummyDataAndDisplayAsTextview();
+        Cursor cursor = readDummyDataFromDb();
+
+        if (cursor != null) {
+            String habit = cursor.getString(
+                    cursor.getColumnIndexOrThrow(HabitTrackerContract.HabitEntry.COLUMN_HABIT_NAME));
+            int duration = cursor.getInt(
+                    cursor.getColumnIndexOrThrow(HabitTrackerContract.HabitEntry.COLUMN_HABIT_DURATION)
+            );
+            Log.d(AppConst.TAG,
+                    "HABIT: " + habit + " Duration: " + duration + " hours");
+        }
+
     }
 
-    private void insertDummyDataToDb (){
+    private void insertDummyDataToDb() {
 
         try {
-              // jogging Value
+            // jogging Value
             ContentValues joggingVal = new ContentValues();
             joggingVal.put(HabitTrackerContract.HabitEntry.COLUMN_HABIT_NAME,
-                                                                    AppConst.HABIT_JOGGING);
+                    AppConst.HABIT_JOGGING);
             joggingVal.put(HabitTrackerContract.HabitEntry.COLUMN_HABIT_DATE,
-                                simpleDateFormat.format(
-                                        simpleDateFormat.parse("05-10-2016 18:06")));
+                    simpleDateFormat.format(
+                            simpleDateFormat.parse("05-10-2016 18:06")));
             joggingVal.put(HabitTrackerContract.HabitEntry.COLUMN_HABIT_DURATION,
-                                2);
+                    2);
 
-            mDb.insert(HabitTrackerContract.HabitEntry.TABLE_NAME,null, joggingVal);
+            mDb.insert(HabitTrackerContract.HabitEntry.TABLE_NAME, null, joggingVal);
 
             // soccer Value
             ContentValues socverVal = new ContentValues();
@@ -67,16 +78,19 @@ public class HabitTrackerActivity extends AppCompatActivity {
             mDb.insert(HabitTrackerContract.HabitEntry.TABLE_NAME, null, socverVal);
 
 
-
-
-
         } catch (ParseException e) {
-            Log.e(AppConst.TAG,"Failed to parse Date string");
+            Log.e(AppConst.TAG, "Failed to parse Date string");
             e.printStackTrace();
         }
     }
 
-    private void readDummyDataAndDisplayAsTextview (){
+    /**
+     * read item from habit table
+     * return null if cursor is not valid
+     *
+     * @return
+     */
+    private Cursor readDummyDataFromDb() {
         Cursor cursor = mDb.query(
                 HabitTrackerContract.HabitEntry.TABLE_NAME,
                 projectionToRead,
@@ -87,20 +101,10 @@ public class HabitTrackerActivity extends AppCompatActivity {
                 sortOrder
         );
 
-        boolean result = cursor.moveToFirst();
-
-        // only log it for now
-        if (result){
-            String habit = cursor.getString(
-                    cursor.getColumnIndexOrThrow(HabitTrackerContract.HabitEntry.COLUMN_HABIT_NAME));
-            int duration = cursor.getInt(
-                    cursor.getColumnIndexOrThrow(HabitTrackerContract.HabitEntry.COLUMN_HABIT_DURATION)
-            );
-            Log.d(AppConst.TAG,
-                    "HABIT: "+habit +" Duration: "+duration+" hours");
+        if (cursor.moveToFirst()) {
+            return cursor;
         }
-
-
+        return null;
 
     }
 }
